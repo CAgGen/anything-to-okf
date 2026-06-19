@@ -9,9 +9,10 @@ description: >-
   skill whenever the user wants to turn documents, datasets, a folder of mixed
   files, a knowledge base, a spec, or an export into OKF, an "OKF bundle", a
   "knowledge bundle", or "Open Knowledge Format" — even if they just say
-  "convert these to OKF" or "build a knowledge bundle from this folder". Do NOT
-  use the Python enrichment agent from the knowledge-catalog repo; this skill is
-  the standalone, CLI-driven path.
+  "convert these to OKF" or "build a knowledge bundle from this folder". Also
+  triggers on sub-commands: `/anything-to-okf generate`, `refine`, `score`,
+  `enhance`, `export`. Do NOT use the Python enrichment agent from the
+  knowledge-catalog repo; this skill is the standalone, CLI-driven path.
 ---
 
 # Anything → OKF
@@ -29,6 +30,18 @@ The grounded prose-writing of each concept is delegated to the `claude` and/or
 `codex` CLIs via [scripts/convert_source.sh](scripts/convert_source.sh). The
 deterministic mechanics — index generation and conformance checking — are
 scripts, not LLM calls.
+
+## Commands
+
+| Command | What it does |
+|---------|-------------|
+| `/anything-to-okf generate` | Convert source files into an OKF bundle with cross-table concepts |
+| `/anything-to-okf refine` | Polish concepts without re-extracting sources |
+| `/anything-to-okf score` | Evaluate bundle quality (structural, coverage, cross-refs) |
+| `/anything-to-okf enhance` | Apply user feedback proposals to concepts |
+| `/anything-to-okf export` | Prepare bundle for Obsidian / git / Hugo / Dataplex |
+
+Plain English works too — the skill reads intent from context automatically.
 
 ## When to use this
 
@@ -200,12 +213,12 @@ validation status.
 
 ---
 
-## After the Initial Generation: Continuous Refinement (Phase 2+)
+## After Generation: refine → score → enhance → export
 
-Once Phase 1 completes, the user has a working OKF bundle. But it may not be perfect yet.
-The skill now supports interactive improvement **without re-extracting sources**:
+Once `generate` completes, the user has a working OKF bundle. The skill supports
+interactive improvement **without re-extracting sources**:
 
-### Phase 2: Refinement — Free-text iteration
+### refine — Polish concepts
 
 **In the chat:** User says anything like:
 
@@ -222,9 +235,9 @@ The skill now supports interactive improvement **without re-extracting sources**
 **No source re-extraction.** The aggregated concepts stay the same;
 only the generated markdown is edited. Supports unlimited iteration rounds.
 
-**Commands:** Ask for any change to any concept; the skill tracks history.
+**Commands:** Ask for any change, or type `/anything-to-okf refine <concept>`.
 
-### Phase 3: Evaluation — Quality scoring
+### score — Evaluate quality
 
 **In the chat:** User says:
 
@@ -242,9 +255,9 @@ only the generated markdown is edited. Supports unlimited iteration rounds.
 
 **Future:** Golden-based metrics (hallucination check, concept recall, consistency).
 
-**Commands:** Ask for a score; skill reports back with a scorecard.
+**Commands:** "Score it", "How good is it?", or `/anything-to-okf score`.
 
-### Phase 4: Feedback — User proposals
+### enhance — Apply feedback
 
 **In the chat:** User provides feedback in JSON format or describes it naturally:
 
@@ -264,46 +277,41 @@ only the generated markdown is edited. Supports unlimited iteration rounds.
 **Feedback is ADDITIVE:** Never removes or overwrites existing content;
 only enhances based on user input.
 
-**Commands:** Describe what to improve; skill refines the concepts.
+**Commands:** Describe what to add, or `/anything-to-okf enhance`.
 
 ---
 
 ## Complete Example Journey
 
 ```
-User: "Convert my sales.csv, customers.json, and schema-doc.md to OKF"
-→ Skill runs Phase 1: generates bundle with cross-table concepts
-→ Bundle: 12 concepts, bidirectional FK links, all validated ✅
+User: "/anything-to-okf generate" (or "Convert my sales.csv, customers.json, schema-doc.md to OKF")
+→ Generates bundle: 12 concepts, bidirectional FK links, validated ✅
 
-User: "The orders overview is too wordy"
-→ Skill runs Phase 2: rewrites that concept, records change
+User: "/anything-to-okf refine" (or "The orders overview is too wordy")
+→ Rewrites that concept, records change — no source re-extraction
 → Updated orders.md (shorter, clearer)
 
-User: "Score it"
-→ Skill runs Phase 3: evaluation report
+User: "/anything-to-okf score" (or "Score it")
 → Structural Validity: 99/100, Cross-References: 100%, Overall: 98/100
 
-User: "Add info about cascade delete on the customer FK"
-→ Skill runs Phase 4: feedback → updates schema section
-→ orders.md now includes cascade semantics
+User: "/anything-to-okf enhance" (or "Add cascade delete semantics to the FK")
+→ Feedback → updates schema section in orders.md
 
-User: "Final score?"
-→ Skill re-evaluates: Overall 100/100 ✅
-
-User: "Done! Export it"
-→ Skill outputs final bundle (ready for version control, Obsidian, Hugo, etc.)
+User: "/anything-to-okf export" (or "Done, export to Obsidian")
+→ Final bundle ready for version control, Obsidian, Hugo, Dataplex, etc.
 ```
 
 ---
 
 ## Key Properties
 
-**Phase 1 (Generation):** Extracts sources → generates concepts → aggregates relationships
-**Phase 2 (Refinement):** Free-text iteration on generated markdown (no re-extraction)
-**Phase 3 (Evaluation):** Quality metrics (structural + future: judge-based)
-**Phase 4 (Feedback):** User-provided context → concept re-refinement
+**generate:** Extracts sources → concepts → aggregates cross-table relationships
+**refine:** Free-text iteration on generated markdown (no re-extraction)
+**score:** Quality metrics (structural validity, coverage, cross-refs; future: judge-based)
+**enhance:** User-provided context → concept re-refinement, additive only
+**export:** Prepare bundle for target platform (Obsidian, git, Hugo, Dataplex)
 
-All four phases are part of ONE continuous dialogue in the skill, not separate tools.
+All commands are part of ONE continuous dialogue — not separate tools.
 
 ## Grounding and quality rules (these make or break the output)
 
@@ -347,15 +355,14 @@ should be able to rely on it without re-reading the sources. So:
 - [scripts/build_bundle_with_concepts.sh](scripts/build_bundle_with_concepts.sh) —
   orchestrate the full pipeline (steps 5-7 in one go).
 
-**Refinement, Evaluation, Feedback (Phase 2-4):**
-- [scripts/refine_session.py](scripts/refine_session.py) — manage refinement
-  session state (`refine_session.json`), track change history, support rollback
-  (Phase 2).
-- [scripts/evaluate_bundle.py](scripts/evaluate_bundle.py) — run quality metrics
-  (structural validity, concept coverage, cross-reference completeness); extensible
-  for judge-based checks (Phase 3).
-- [scripts/apply_feedback.py](scripts/apply_feedback.py) — load user feedback
-  proposals (JSON format) and re-refine affected concepts via Claude (Phase 4).
+**refine / score / enhance:**
+- [scripts/refine_session.py](scripts/refine_session.py) — session state for
+  `refine`: tracks change history, supports rollback via `refine_session.json`.
+- [scripts/evaluate_bundle.py](scripts/evaluate_bundle.py) — `score`: structural
+  validity, concept coverage, cross-reference completeness; extensible for
+  judge-based checks.
+- [scripts/apply_feedback.py](scripts/apply_feedback.py) — `enhance`: loads user
+  feedback proposals (JSON) and re-refines affected concepts via Claude.
 
 **Index and validation:**
 - [scripts/generate_indexes.py](scripts/generate_indexes.py) — generate all

@@ -1,0 +1,17 @@
+{
+  "name": "anything-to-okf",
+  "version": "1.0.0",
+  "description": "Claude Code skill — convert any file format to Open Knowledge Format (OKF) bundles",
+  "bin": {
+    "anything-to-okf": "bin/install.js"
+  },
+  "keywords": ["claude-code", "skill", "okf", "knowledge", "markdown"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=14"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CAgcoder/anything-to-okf.git"
+  }
+}

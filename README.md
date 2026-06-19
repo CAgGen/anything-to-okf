@@ -13,41 +13,54 @@ Perfect for:
 
 ---
 
-## 🚀 Quick Start (< 5 minutes)
+## 📦 Installation
 
-### 1. Say what you want
+**Prerequisites:** [Claude Code](https://claude.ai/code) + Node.js 14+
 
-```
-User: "Convert my sales folder to OKF. I have orders.csv, customers.json, and a schema doc."
-```
-
-### 2. Watch it build your bundle
-
-The skill will:
-- ✅ Extract content from all formats
-- ✅ Auto-detect cross-table relationships (foreign keys, metrics)
-- ✅ Bidirectionally inject links (no manual linking needed)
-- ✅ Generate `index.md` files for navigation
-- ✅ Validate against OKF spec
-
-### 3. Refine interactively
-
-```
-User: "Make the orders overview more concise"
-User: "Add an Examples section with queries"
-User: "Score the bundle"
-User: "Add this detail about customer tiers"
+```bash
+npx github:CAgcoder/anything-to-okf
 ```
 
-**No re-extraction needed.** The skill edits generated markdown on the fly.
+That's it. The skill is copied to `~/.claude/skills/anything-to-okf/` and available in every project. **Restart Claude Code** to activate.
 
-### 4. Export anywhere
+> **Manual install (no Node.js):** Clone this repo and copy the `SKILL.md`, `scripts/`, `references/`, and `evals/` folders into `~/.claude/skills/anything-to-okf/`.
 
-Your bundle is **plain markdown** — portable and ready for:
-- Git (version control, diffs, PRs)
-- Obsidian / MkDocs / Hugo / Notion
-- LLM context (just load the .md files)
-- Dataplex (convert to mdcode via kcmd if needed)
+---
+
+## 🚀 Quick Start
+
+Open Claude Code in any project directory, then:
+
+**Step 1 — Point at your files**
+
+```
+/anything-to-okf generate
+```
+
+Claude will ask what files to convert, or you can say it directly:
+
+```
+/anything-to-okf generate my-data/orders.csv my-data/customers.json docs/schema.md
+```
+
+**Step 2 — Wait for the bundle**
+
+The skill extracts content, detects cross-table relationships, and writes a linked OKF bundle. You'll see:
+
+```
+✅ Bundle generated: okf-bundle/ (12 concepts, 3 cross-table relationships)
+```
+
+**Step 3 — Refine in chat**
+
+```
+/anything-to-okf refine   ← "make the orders section shorter"
+/anything-to-okf score    ← get a quality scorecard
+/anything-to-okf enhance  ← "add that customer tier affects SLA"
+/anything-to-okf export   ← prepare for Obsidian / git / Hugo
+```
+
+Plain English works too — just describe what you want and the skill figures out which command to run.
 
 ---
 
@@ -68,9 +81,9 @@ Your bundle is **plain markdown** — portable and ready for:
 
 ---
 
-## 📋 How It Works: 4 Phases
+## 📋 How It Works
 
-### **Phase 1: Generation** (Automatic)
+### **generate** — Build the bundle
 
 Extract, deduplicate, and intelligently inject cross-table relationships.
 
@@ -85,35 +98,30 @@ inject_shared_concepts.py → Bidirectional links
 Output: OKF bundle with auto-detected relationships
 ```
 
-**Example:** A CSV with `customer_id` column + a JSON schema + a doc saying "orders.customer_id → customers.id" → the FK appears in **both** orders and customers overviews automatically.
+**Example:** A CSV with `customer_id` + a JSON schema + a doc saying "orders.customer_id → customers.id" → the FK appears in **both** orders and customers automatically.
 
-### **Phase 2: Refinement** (Interactive)
+### **refine** — Polish concepts
 
 Free-text iteration on generated markdown — no source re-extraction.
 
 ```
-User: "Make orders shorter"
+User: "/anything-to-okf refine — make orders shorter"
   ↓ (loads current orders.md, calls claude with refinement request)
-Output: Refined orders.md (saved)
+Output: Refined orders.md (saved, history tracked)
 ```
 
-Commands: `"Make X more concise"`, `"Add Examples"`, `"Show history"`, `"Revert"`
-
-### **Phase 3: Evaluation** (Quality Scoring)
+### **score** — Evaluate quality
 
 Metrics dashboard for your bundle.
 
 ```
-Output:
-  Structural Validity: 99/100 ✅
-  Concept Coverage: 12 concepts
-  Cross-References: 100% (all bidirectional)
-  Overall Score: 99/100 ✅
+Structural Validity: 99/100 ✅
+Concept Coverage: 12 concepts
+Cross-References: 100% (all bidirectional)
+Overall Score: 99/100 ✅
 ```
 
-Future: Judge-based metrics (hallucination, recall, consistency).
-
-### **Phase 4: Feedback** (User Overrides)
+### **enhance** — Apply feedback
 
 Incorporate domain knowledge without re-extracting.
 
@@ -129,7 +137,7 @@ Incorporate domain knowledge without re-extracting.
 }
 ```
 
-The skill re-refines with feedback as additional context. Additive only — never removes existing content.
+Additive only — never removes existing content.
 
 ---
 
@@ -144,20 +152,15 @@ The skill re-refines with feedback as additional context. Additive only — neve
 
 ### Commands:
 ```
-1. User: "Build an OKF bundle from this sales data"
-   → Skill Phase 1: generates bundle (12 concepts, cross-table FKs detected)
+1. /anything-to-okf generate  →  bundle: 12 concepts, FKs detected, validated ✅
 
-2. User: "Too verbose, shorten the schema sections"
-   → Skill Phase 2: refines (no re-extraction)
+2. /anything-to-okf refine    →  "shorten schema sections" (no re-extraction)
 
-3. User: "Score it"
-   → Skill Phase 3: "98/100 ✅"
+3. /anything-to-okf score     →  "98/100 ✅"
 
-4. User: "Add that the tier affects SLA"
-   → Skill Phase 4: updates customer schema with SLA info
+4. /anything-to-okf enhance   →  "add that tier affects SLA" → customer schema updated
 
-5. User: "Export to Obsidian"
-   → Skill outputs: ready to drag into Obsidian vault
+5. /anything-to-okf export    →  ready to drag into Obsidian vault
 ```
 
 ---
@@ -254,36 +257,6 @@ Document your codebase structure, dependencies, and cross-module relationships.
 **Output:** Navigable code knowledge base
 
 ---
-
-## 🚀 Getting Started
-
-### Installation
-
-This is a Claude Code **skill**. No installation needed — just use it in Claude Code:
-
-1. Copy `.claude/skills/anything-to-okf/` into your Claude Code skills directory
-2. Or reference it from this repo: `https://github.com/<user>/anything-to-okf`
-
-### First Run
-
-```
-Open Claude Code
-Say: "Convert my docs/sales folder to OKF"
-Skill runs Phase 1 → You get a bundle
-Continue in chat:
-  • "Make the orders concept shorter"
-  • "Score the bundle"
-  • "Add this detail..."
-```
-
-### View the Bundle
-
-```bash
-# After skill generates the bundle
-cd <bundle-output-dir>
-ls -la  # See .md files
-cat tables/orders.md  # Read a concept
-```
 
 ---
 
