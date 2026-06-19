@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+build/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Claude Code / Local Development
+.claude/
+.claude-history
+.env.local
+*.local.json
+
+# Temporary files
+.okf-work/
+okf-work/
+*.tmp
+*.bak
+*_backup
+
+# Build outputs
+dist/
+build/
+*.egg-info
+
+# Test outputs
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node (if applicable)
+node_modules/
+npm-debug.log
+package-lock.json
+
+# Logs
+*.log
+logs/
+
+# Session/State files (except source)
+refine_session.json
+aggregated_concepts.json
+all_concepts.json

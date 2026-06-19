@@ -1,0 +1,21 @@
+{
+  "proposals": [
+    {
+      "concept_id": "tables/orders",
+      "target_section": "# Schema",
+      "feedback": "Add clarification that total_usd is set to 0.00 when status changes to 'refunded'",
+      "priority": "high"
+    },
+    {
+      "concept_id": "tables/customers",
+      "feedback": "Explain the customer tier field: free tier has basic access, plus tier adds analytics, pro tier adds team features and priority support",
+      "priority": "medium"
+    },
+    {
+      "concept_id": "tables/orders",
+      "target_section": "# Examples",
+      "feedback": "Include a JOIN query between orders and customers that demonstrates the foreign key relationship",
+      "priority": "low"
+    }
+  ]
+}

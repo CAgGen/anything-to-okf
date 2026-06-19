@@ -1,0 +1,64 @@
+{
+  "skill_name": "anything-to-okf",
+  "evals": [
+    {
+      "id": 0,
+      "name": "mixed-folder-to-bundle",
+      "prompt": "I've got a folder of mixed files describing our sales data — a CSV of orders, a JSON schema for the customers table, and a markdown refund runbook. Turn the whole folder into an OKF bundle at ./sales-okf so our agents can browse it.",
+      "expected_output": "An OKF bundle directory ./sales-okf containing one concept .md per source (orders, customers, refund playbook), each with valid YAML frontmatter incl. a non-empty type, grouped sensibly, with auto-generated index.md files and passing validate_bundle.py. Concepts should be grounded only in the source content (exact column names/types/values) and cross-link where the sources relate (orders.customer_id -> customers).",
+      "files": ["fixtures/orders.csv", "fixtures/customers.json", "fixtures/refund-playbook.md"],
+      "assertions": [
+        {"text": "A bundle root directory is created (e.g. ./sales-okf) containing at least 3 concept .md files."},
+        {"text": "Every non-reserved .md file has a parseable YAML frontmatter block with a non-empty 'type' field."},
+        {"text": "At least one index.md is generated and the bundle passes scripts/validate_bundle.py with 0 errors."},
+        {"text": "The customers concept lists the exact columns customer_id, email, tier, created_at with their types — no invented columns."},
+        {"text": "The orders concept reflects real CSV columns (order_id, customer_id, status, total_usd, placed_at) and does not invent owners/SLAs/lineage not present in the source."},
+        {"text": "There is a bundle-relative cross-link between the orders concept and the customers concept (e.g. /.../customers.md)."},
+        {"text": "No fabricated facts: the refund concept's 30-minute reversal / pro-priority details match the runbook and nothing extra is asserted."}
+      ]
+    },
+    {
+      "id": 1,
+      "name": "single-csv-to-okf",
+      "prompt": "Convert this orders.csv into Open Knowledge Format. I just want a single clean OKF concept doc for the orders table.",
+      "expected_output": "A bundle (or single concept) where orders is one OKF concept: valid frontmatter with a non-empty type (e.g. 'Table' or similar), a # Schema section defining each real column with its meaning, no invented columns or facts, and it passes the validator.",
+      "files": ["fixtures/orders.csv"],
+      "assertions": [
+        {"text": "An OKF concept .md for orders is produced with valid frontmatter and a non-empty 'type'."},
+        {"text": "The body has a structured schema (table or list) defining order_id, customer_id, status, total_usd, placed_at — the exact CSV columns."},
+        {"text": "Column meanings are described (not bare name+type) and status values reflect the data (completed/refunded/pending) without inventing an enum the data doesn't show."},
+        {"text": "The result passes scripts/validate_bundle.py with 0 errors."}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "thin-source-no-padding",
+      "prompt": "Here's a JSON file describing the customers table — make it into an OKF bundle. Don't make up any details that aren't in the file.",
+      "expected_output": "A single OKF concept for customers grounded strictly in customers.json: exact columns and their stated descriptions, the source URL captured as resource and/or a Citation, no fabricated lineage/owners/SLAs. Passes the validator.",
+      "files": ["fixtures/customers.json"],
+      "assertions": [
+        {"text": "A customers concept .md with valid frontmatter and non-empty 'type' is produced and passes the validator."},
+        {"text": "The four columns and their descriptions match customers.json exactly (incl. 'email null for guest checkouts', 'tier one of free/plus/pro')."},
+        {"text": "The source URL https://example.internal/catalog/customers is captured as the resource field and/or under # Citations."},
+        {"text": "No invented owners, SLAs, pipelines, row counts, or lineage that are absent from the JSON."}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "cross-table-concepts",
+      "prompt": "Create an OKF bundle from orders.csv, customers.json, and this markdown file about their relationship. The bundle should automatically detect and inject the foreign key relationship between the two tables.",
+      "expected_output": "A bundle with orders and customers concepts that both reference each other via a '# Cross-references' section. The FK relationship is extracted from the markdown, deduplicated, and bidirectionally injected—both orders mentions the link to customers AND customers mentions the inbound orders reference, even though the relationship is only explicitly stated once.",
+      "files": ["fixtures/orders.csv", "fixtures/customers.json", "fixtures/order_customer_relationship.md"],
+      "assertions": [
+        {"text": "Both orders.md and customers.md are generated with valid frontmatter and non-empty 'type'."},
+        {"text": "A .concepts.json sidecar is created for the relationship markdown, containing a JSON entry with kind='join', tables=['orders','customers'], and the FK description."},
+        {"text": "The aggregated_concepts.json file lists the orders-customers FK relationship with both table names."},
+        {"text": "orders.md includes a '# Cross-references' section mentioning the link to customers (even though the orders CSV itself doesn't mention the relationship)."},
+        {"text": "customers.md includes a '# Cross-references' section mentioning the link to orders (bidirectional injection)."},
+        {"text": "Both cross-references sections contain markdown links ([orders](/tables/orders.md) or similar)."},
+        {"text": "The relationship description is faithful to the source (customer_id is FK, establishes 1:N, no invented details)."},
+        {"text": "The final bundle passes validate_bundle.py with 0 errors."}
+      ]
+    }
+  ]
+}

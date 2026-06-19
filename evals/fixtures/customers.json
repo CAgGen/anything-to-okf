@@ -1,0 +1,11 @@
+{
+  "table": "customers",
+  "description": "One row per customer account.",
+  "source": "https://example.internal/catalog/customers",
+  "columns": [
+    {"name": "customer_id", "type": "STRING", "description": "Primary key. Joins to orders.customer_id."},
+    {"name": "email", "type": "STRING", "description": "Account email. Null for guest checkouts."},
+    {"name": "tier", "type": "STRING", "description": "One of: free, plus, pro."},
+    {"name": "created_at", "type": "TIMESTAMP", "description": "Account creation time (UTC)."}
+  ]
+}
