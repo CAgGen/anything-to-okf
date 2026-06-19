@@ -15,15 +15,23 @@ Perfect for:
 
 ## 📦 Installation
 
-**Prerequisites:** [Claude Code](https://claude.ai/code) + Node.js 14+
+**Prerequisite:** [Claude Code](https://claude.ai/code)
+
+**Option 1 — Plugin marketplace (recommended):**
+
+```
+/plugin marketplace add CAgcoder/anything-to-okf
+```
+
+**Option 2 — npx (Node.js 14+ required):**
 
 ```bash
 npx github:CAgcoder/anything-to-okf
 ```
 
-That's it. The skill is copied to `~/.claude/skills/anything-to-okf/` and available in every project. **Restart Claude Code** to activate.
+**Option 3 — Manual:** Clone this repo and copy `SKILL.md`, `scripts/`, `references/`, `evals/` into `~/.claude/skills/anything-to-okf/`.
 
-> **Manual install (no Node.js):** Clone this repo and copy the `SKILL.md`, `scripts/`, `references/`, and `evals/` folders into `~/.claude/skills/anything-to-okf/`.
+**Restart Claude Code** to activate.
 
 ---
 
